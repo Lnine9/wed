@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>山景入场预览</title>
+    <style>
+      :root {
+        --ink: #233127;
+        --paper: #f4f0e4;
+        --moss: #597252;
+        --line: #d8d1bd;
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 15% 8%, rgba(210, 221, 184, 0.55), transparent 31rem),
+          var(--paper);
+        font-family: "Noto Serif SC", "Songti SC", serif;
+      }
+
+      .wrap {
+        width: min(1060px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 42px 0 54px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: #64795d;
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 5vw, 46px);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .lead {
+        max-width: 38rem;
+        margin: 14px 0 28px;
+        color: #5d685c;
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 390px) 1fr;
+        gap: clamp(28px, 5vw, 72px);
+        align-items: center;
+      }
+
+      .phone {
+        position: relative;
+        width: min(100%, 390px);
+        aspect-ratio: 941 / 1672;
+        overflow: hidden;
+        border: 9px solid #243026;
+        border-radius: 34px;
+        background: #dbe8eb;
+        box-shadow: 0 24px 44px rgba(52, 65, 41, 0.22);
+      }
+
+      .scene,
+      .scene img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .scene img {
+        object-fit: cover;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .scene .mountain-one {
+        z-index: 1;
+        transform: translateY(108%);
+      }
+
+      .scene .mountain-two {
+        z-index: 3;
+        transform: translateY(108%);
+      }
+
+      .scene .pig-two {
+        z-index: 2;
+        inset: auto;
+        width: 46%;
+        height: auto;
+        left: 28%;
+        bottom: -31%;
+        transform: rotate(-8deg);
+        opacity: 0;
+      }
+
+      .scene .pig-one {
+        z-index: 4;
+        inset: auto;
+        width: 14%;
+        height: auto;
+        left: 44%;
+        bottom: -11%;
+        transform: rotate(-8deg);
+        opacity: 0;
+      }
+
+      .play .mountain-one {
+        animation: rise 780ms var(--ease-out) forwards;
+      }
+
+      .play .mountain-two {
+        animation: rise 820ms 500ms var(--ease-out) forwards;
+      }
+
+      .play .pig-two {
+        animation: pig-two-path 1700ms 1000ms var(--ease-out) forwards;
+      }
+
+      .play .pig-one {
+        animation: pig-one-path 1700ms 1000ms var(--ease-out) forwards;
+      }
+
+      @keyframes rise {
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pig-two-path {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) rotate(-8deg) scale(0.8);
+        }
+        8% {
+          opacity: 1;
+        }
+        42% {
+          transform: translate(-17%, -112%) rotate(8deg) scale(0.9);
+        }
+        72% {
+          transform: translate(18%, -210%) rotate(-4deg) scale(0.97);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(5%, -288%) rotate(0) scale(1);
+        }
+      }
+
+      @keyframes pig-one-path {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) rotate(-8deg);
+        }
+        8% {
+          opacity: 1;
+        }
+        42% {
+          transform: translate(-52%, -245%) rotate(8deg);
+        }
+        72% {
+          transform: translate(55%, -468%) rotate(-4deg);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(16%, -638%) rotate(0);
+        }
+      }
+
+      .side {
+        border-top: 1px solid var(--line);
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 38px 1fr;
+        gap: 16px;
+        padding: 19px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .number {
+        padding-top: 2px;
+        color: var(--moss);
+        font-family: "Avenir Next", sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .step h2 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.04em;
+      }
+
+      .step p {
+        margin: 7px 0 0;
+        color: #657065;
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 26px;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 0;
+        padding: 12px 18px;
+        color: #f5f1e5;
+        background: #3d583d;
+        font: 600 14px "Avenir Next", "PingFang SC", sans-serif;
+        cursor: pointer;
+      }
+
+      button:hover,
+      button:focus-visible {
+        background: #263f2a;
+      }
+
+      .note {
+        color: #72806f;
+        font: 13px "Avenir Next", "PingFang SC", sans-serif;
+      }
+
+      @media (max-width: 720px) {
+        .wrap {
+          width: min(100% - 28px, 430px);
+          padding-top: 28px;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .phone {
+          margin: 0 auto;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .scene .mountain-one,
+        .scene .mountain-two {
+          transform: translateY(0);
+        }
+
+        .scene .pig-two {
+          bottom: 24%;
+          left: 31%;
+          opacity: 1;
+          transform: rotate(0);
+        }
+
+        .scene .pig-one {
+          bottom: 50%;
+          left: 46%;
+          opacity: 1;
+          transform: rotate(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <p class="eyebrow">MOUNTAIN SCENE / MOTION STUDY</p>
+      <h1>山顶的抵达</h1>
+      <p class="lead">
+        以现有素材搭建竖屏叙事场景。背景始终固定，远近两层山体依次向上托起，双猪沿同一条 S 曲线攀至山顶，形成清晰的纵深关系。
+      </p>
+
+      <section class="layout">
+        <div class="phone" aria-label="山景动画预览">
+          <div id="scene" class="scene">
+            <img src="/assets/山背景.png" alt="" />
+            <img class="mountain-one" src="/assets/山1.png" alt="" />
+            <img class="pig-two" src="/assets/猪2.png" alt="" />
+            <img class="mountain-two" src="/assets/山2.png" alt="" />
+            <img class="pig-one" src="/assets/猪1.png" alt="" />
+          </div>
+        </div>
+
+        <div>
+          <div class="side">
+            <article class="step">
+              <span class="number">00.0s</span>
+              <div>
+                <h2>静止背景</h2>
+                <p>仅展示山背景，保留上方留白，制造等待入场的镜头感。</p>
+              </div>
+            </article>
+            <article class="step">
+              <span class="number">00.0s</span>
+              <div>
+                <h2>山 1 上升</h2>
+                <p>从画面底部以 780ms ease-out 进入，作为第一层地势。</p>
+              </div>
+            </article>
+            <article class="step">
+              <span class="number">00.5s</span>
+              <div>
+                <h2>山 2 托起前景</h2>
+                <p>延迟 500ms 上升，覆盖山 1 与大猪，确保近山的遮挡关系成立。</p>
+              </div>
+            </article>
+            <article class="step">
+              <span class="number">01.0s</span>
+              <div>
+                <h2>双猪登顶</h2>
+                <p>猪 2 在远山后移动，猪 1 位于近山前；两者沿 S 曲线向上，最终汇聚山顶。</p>
+              </div>
+            </article>
+          </div>
+          <div class="actions">
+            <button id="replay" type="button">重播动画</button>
+            <span class="note">总时长约 2.7 秒</span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const scene = document.getElementById("scene");
+      const replay = document.getElementById("replay");
+
+      function play() {
+        scene.classList.remove("play");
+        void scene.offsetWidth;
+        scene.classList.add("play");
+      }
+
+      replay.addEventListener("click", play);
+      window.addEventListener("load", () => setTimeout(play, 350));
+    </script>
+  </body>
+</html>
