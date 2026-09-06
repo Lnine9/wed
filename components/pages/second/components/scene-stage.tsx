@@ -9,6 +9,7 @@ import {
   useMotionValue,
   useReducedMotion,
 } from 'motion/react'
+import { PageScrollCue } from '@/components/ui/page-scroll-cue'
 import {
   type PointerEvent as ReactPointerEvent,
   useEffect,
@@ -17,9 +18,15 @@ import {
 } from 'react'
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
-const HOLD_DELAY = 280
+const HOLD_DELAY = 170
 const MOVE_TOLERANCE = 8
-const HEART_LIFETIME = 1800
+const HEART_LIFETIME = 1_800
+const MAIN_MOUNTAIN_WIDTH = 942
+const MAIN_MOUNTAIN_HEIGHT = 1586
+const PIG_ROUTE_DELAY = 1.63
+const PIG_ROUTE_DURATION = 2.4
+const PIG_ROUTE_TIMES = [0, 0.12, 0.4, 0.7, 1] as const
+const PHOTO_ROUTE_TIMES = [0.12, 0.4, 0.7, 1] as const
 
 type SceneSize = {
   height: number
@@ -35,6 +42,56 @@ type Reaction = {
   id: number
   kind: 'carrot' | 'heart'
   drift: number
+}
+
+type PhotoMarker = {
+  id: string
+  src: string
+  alt: string
+  x: number
+  y: number
+}
+
+const PHOTO_MARKERS: PhotoMarker[] = [
+  { id: 'middle-left', src: '/assets/洗象池合照.jpg', alt: '干杯合照', x: 0.4, y: 0.582 },
+  { id: 'middle-right', src: '/assets/干杯.jpg', alt: '山上爱心合照', x: 0.65, y: 0.458 },
+  { id: 'upper', src: '/assets/山顶合照.jpg', alt: '山顶合照', x: 0.522, y: 0.147 },
+  { id: 'summit', src: '/assets/山上爱心.jpg', alt: '山顶风景', x: 0.582, y: 0.06 },
+]
+
+const POEM_LINES = [
+  { text: '同窗逢年少', className: 'scene-poem__lead' },
+  { text: '云雾峨眉情字相邀', className: 'scene-poem__middle' },
+  { text: '山海共良宵', className: 'scene-poem__closing' },
+] as const
+
+function ScenePoem({
+  play,
+  reduceMotion,
+}: {
+  play: boolean
+  reduceMotion: boolean | null
+}) {
+  return (
+    <div aria-label="同窗逢年少，云雾峨眉情字相邀，山海共良宵" className="scene-poem">
+      <div aria-hidden="true" className="scene-poem__overlay" />
+      {POEM_LINES.map(({ className, text }, index) => (
+        <motion.p
+          className={className}
+          initial={{ opacity: 0, x: 0, y: 42 }}
+          animate={play ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, x: 0, y: 42 }}
+          key={text}
+          transition={{
+            delay: reduceMotion ? 0 : 0.22 + index * 0.66,
+            duration: reduceMotion ? 0.01 : 1.35,
+            ease: EASE_OUT,
+          }}
+        >
+          {text}
+        </motion.p>
+      ))}
+    </div>
+  )
 }
 
 function useSceneSize(ref: React.RefObject<HTMLElement | null>) {
@@ -267,10 +324,10 @@ function ClimbingPig({
         zIndex: 30,
       }}
       transition={{
-        duration: reduceMotion ? 0.01 : 2.4,
-        delay: reduceMotion ? 0 : 1.63,
+        duration: reduceMotion ? 0.01 : PIG_ROUTE_DURATION,
+        delay: reduceMotion ? 0 : PIG_ROUTE_DELAY,
         ease: EASE_OUT,
-        times: [0, 0.12, 0.4, 0.7, 1],
+        times: [...PIG_ROUTE_TIMES],
       }}
     >
       <motion.div
@@ -278,6 +335,7 @@ function ClimbingPig({
         aria-label={kind === 'pig-one' ? '猪一' : '猪二'}
         aria-pressed={kind === 'pig-one' ? growth > 0 : undefined}
         className="relative cursor-grab outline-none active:cursor-grabbing"
+        data-pig-control
         role="button"
         style={{
           height: `${size.height}px`,
@@ -303,7 +361,11 @@ function ClimbingPig({
         onPointerUp={finishDrag}
       >
         <motion.div
-          animate={{ scale: kind === 'pig-one' ? 1 + growth * 0.1 : 1 }}
+          animate={{
+            scale:
+              (kind === 'pig-one' ? 1 + growth * 0.1 : 1) +
+              (dragging ? 0.04 : 0),
+          }}
           style={{ transformOrigin: '50% 50%' }}
           transition={{ duration: reduceMotion ? 0.01 : 0.24, ease: EASE_OUT }}
         >
@@ -314,6 +376,11 @@ function ClimbingPig({
             draggable={false}
             animate={pigControls}
             src={src}
+            style={{
+              filter: dragging
+                ? 'drop-shadow(5px 10px 10px rgba(39, 24, 18, 0.38))'
+                : 'drop-shadow(3px 6px 5px rgba(39, 24, 18, 0.25))',
+            }}
           />
         </motion.div>
 
@@ -352,11 +419,144 @@ function ClimbingPig({
   )
 }
 
-export function SceneStage() {
+function MountainPhotoMarkers({
+  mountainHeight,
+  mountainTop,
+  play,
+  reduceMotion,
+  size,
+}: {
+  mountainHeight: number
+  mountainTop: number
+  play: boolean
+  reduceMotion: boolean | null
+  size: SceneSize
+}) {
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoMarker | null>(null)
+  const [markersEntered, setMarkersEntered] = useState(false)
+
+  useEffect(() => {
+    if (!play) {
+      setMarkersEntered(false)
+      return
+    }
+
+    const entryDuration =
+      PIG_ROUTE_DELAY +
+      PIG_ROUTE_DURATION * PHOTO_ROUTE_TIMES[PHOTO_ROUTE_TIMES.length - 1] +
+      0.65
+    const timer = window.setTimeout(
+      () => setMarkersEntered(true),
+      reduceMotion ? 0 : entryDuration * 1000,
+    )
+    return () => window.clearTimeout(timer)
+  }, [play, reduceMotion])
+
+  const openPhoto = (photo: PhotoMarker) => {
+    setMarkersEntered(true)
+    setSelectedPhoto(photo)
+  }
+
+  useEffect(() => {
+    if (!selectedPhoto) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedPhoto(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedPhoto])
+
+  const getPosition = (photo: PhotoMarker) => ({
+    left: size.width * (photo.x + 0.075),
+    top: mountainTop + mountainHeight * photo.y - 40,
+  })
+
+  return (
+    <>
+      <div aria-label="山路照片" className="scene-photo-markers">
+        {PHOTO_MARKERS.map((photo, index) => (
+          <motion.button
+            aria-label={`查看${photo.alt}`}
+            className="scene-photo-marker"
+            initial={{ opacity: 0, scale: 0.7, y: 18 }}
+            animate={{
+              opacity: play && selectedPhoto?.id !== photo.id ? 1 : 0,
+              scale: 1,
+              y: 0,
+            }}
+            layoutId={`mountain-photo-${photo.id}`}
+            key={photo.id}
+            style={getPosition(photo)}
+            transition={{
+              delay: markersEntered
+                ? 0
+                : PIG_ROUTE_DELAY + PIG_ROUTE_DURATION * PHOTO_ROUTE_TIMES[index],
+              duration: reduceMotion ? 0.01 : 0.65,
+              ease: EASE_OUT,
+              layout: {
+                duration: reduceMotion ? 0.01 : 0.38,
+                ease: EASE_OUT,
+              },
+            }}
+            type="button"
+            onClick={() => openPhoto(photo)}
+          >
+            <img
+              alt=""
+              aria-hidden="true"
+              className="scene-photo-marker__frame"
+              src="/assets/film-frame.png"
+            />
+            <img alt="" aria-hidden="true" className="scene-photo-marker__image" src={photo.src} />
+          </motion.button>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {selectedPhoto && (
+          <motion.div
+            aria-label={`${selectedPhoto.alt}预览`}
+            aria-modal="true"
+            className="scene-photo-preview"
+            role="dialog"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="scene-photo-preview__backdrop"
+              initial={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0.01 : 0.28 }}
+            />
+            <motion.div
+              className="scene-photo-preview__content"
+              layoutId={`mountain-photo-${selectedPhoto.id}`}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <img alt={selectedPhoto.alt} src={selectedPhoto.src} />
+              <button
+                aria-label="关闭图片预览"
+                className="scene-photo-preview__close"
+                type="button"
+                onClick={() => setSelectedPhoto(null)}
+              >
+                ✕
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+export function SceneStage({ active }: { active?: boolean }) {
   const stageRef = useRef<HTMLElement>(null)
   const size = useSceneSize(stageRef)
   const isInView = useInView(stageRef, { amount: 0.55, once: true })
   const reduceMotion = useReducedMotion()
+  const shouldPlay = active ?? isInView
 
   const pigOne = {
     height: Math.round(size.width * 0.164),
@@ -366,7 +566,27 @@ export function SceneStage() {
     height: Math.round(size.width * 0.134),
     width: Math.round(size.width * 0.164),
   }
-  const point = (x: number, y: number): Point => ({ x, y })
+  const mainMountainHeight =
+    size.width * (MAIN_MOUNTAIN_HEIGHT / MAIN_MOUNTAIN_WIDTH)
+  const mainMountainTop = size.height - mainMountainHeight
+  const percentPoint = (x: number, y: number): Point => ({
+    x: size.width * x,
+    y: mainMountainTop + mainMountainHeight * y,
+  })
+  // 按标注图的图片百分比取点，顺序为从山脚向山顶的四个折返点。
+  const routePercentages = [
+    { x: 0.5, y: 1.2},
+    { x: 0.566, y: 0.882 },
+    { x: 0.4, y: 0.582 },
+    { x: 0.65, y: 0.368 },
+    { x: 0.522, y: 0.187 },
+  ] as const
+  const climbingRoute = routePercentages.map(({ x, y }) =>
+    percentPoint(x, y),
+  )
+  const secondClimbingRoute = routePercentages.map(({ x, y }, index) =>
+    percentPoint(x + (index === 0 ? 0.12 : 0.075), y + 0.022),
+  )
 
   return (
     <section
@@ -374,6 +594,8 @@ export function SceneStage() {
       aria-label="群猪登山动画"
       className="relative h-dvh w-full overflow-hidden bg-[#d8c4b2]"
     >
+      <ScenePoem play={shouldPlay} reduceMotion={reduceMotion} />
+
       <img
         alt=""
         aria-hidden="true"
@@ -388,7 +610,7 @@ export function SceneStage() {
             alt="远处山门"
             delay={0.35}
             layer={20}
-            play={isInView}
+            play={shouldPlay}
             reduceMotion={reduceMotion}
             sceneHeight={size.height}
             src="/assets/山1.png"
@@ -397,39 +619,37 @@ export function SceneStage() {
             alt="登山主峰"
             delay={0.85}
             layer={10}
-            play={isInView}
+            play={shouldPlay}
             reduceMotion={reduceMotion}
             sceneHeight={size.height}
             src="/assets/山.png"
           />
+          <MountainPhotoMarkers
+            mountainHeight={mainMountainHeight}
+            mountainTop={mainMountainTop}
+            play={shouldPlay}
+            reduceMotion={reduceMotion}
+            size={size}
+          />
           <ClimbingPig
             kind="pig-one"
-            path={[
-              point(size.width * 0.77, size.height + pigOne.height),
-              point(size.width * 0.71, size.height * 0.82),
-              point(size.width * 0.58, size.height * 0.62),
-              point(size.width * 0.48, size.height * 0.42),
-            ]}
-            play={isInView}
+            path={climbingRoute}
+            play={shouldPlay}
             reduceMotion={reduceMotion}
             size={pigOne}
             src="/assets/猪1.png"
           />
           <ClimbingPig
             kind="pig-two"
-            path={[
-              point(size.width * 0.9, size.height + pigTwo.height),
-              point(size.width * 0.79, size.height * 0.86),
-              point(size.width * 0.68, size.height * 0.69),
-              point(size.width * 0.57, size.height * 0.5),
-            ]}
-            play={isInView}
+            path={secondClimbingRoute}
+            play={shouldPlay}
             reduceMotion={reduceMotion}
             size={pigTwo}
             src="/assets/猪2.png"
           />
         </>
       )}
+      <PageScrollCue active={shouldPlay} />
     </section>
   )
 }
