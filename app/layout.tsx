@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { InitialLoading } from '@/components/ui/initial-loading'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="zh-CN" className="bg-[#e9edf1]">
       <body className="antialiased bg-[#e9edf1]">
         {children}
+        <InitialLoading />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

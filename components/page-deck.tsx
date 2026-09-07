@@ -80,7 +80,7 @@ export function PageDeck() {
   const previousIndex = activeIndex > 0 ? activeIndex - 1 : null
 
   useEffect(() => {
-    setCoverVariant(window.location.pathname === '/cover2' ? 'cover2' : 'default')
+    setCoverVariant(window.location.pathname === '/bridal' ? 'cover2' : 'default')
   }, [])
 
   useEffect(() => {

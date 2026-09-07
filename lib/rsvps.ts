@@ -20,7 +20,7 @@ const DATA_FILE = path.join(DATA_DIRECTORY, 'rsvps.json')
 
 export function normalizeReplySource(source: unknown): ReplySource | null {
   if (source === '婚礼' || source === '主页') return '婚礼'
-  if (source === '出阁' || source === 'cover2') return '出阁'
+  if (source === '出阁' || source === 'bridal') return '出阁'
   return null
 }
 

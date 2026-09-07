@@ -321,8 +321,26 @@ function ThirdPageAlbum({ active }: { active: boolean }) {
 export function ThirdPageContent({ active }: { active: boolean }) {
   const introRef = useRef<HTMLVideoElement>(null)
   const loopRef = useRef<HTMLVideoElement>(null)
+  const playRetryRef = useRef<number | null>(null)
   const [showLoop, setShowLoop] = useState(false)
   const [loopPlaying, setLoopPlaying] = useState(false)
+
+  useEffect(() => {
+    const intro = introRef.current
+    const loop = loopRef.current
+    if (!intro || !loop) return
+
+    intro.preload = 'auto'
+    loop.preload = 'auto'
+    intro.load()
+    loop.load()
+
+    return () => {
+      if (playRetryRef.current !== null) {
+        window.clearTimeout(playRetryRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const intro = introRef.current
@@ -344,16 +362,31 @@ export function ThirdPageContent({ active }: { active: boolean }) {
     intro.currentTime = 0
     loop.currentTime = 0
 
+    let disposed = false
+    let attempts = 0
+
     const startIntro = () => {
-      void intro.play()
+      if (disposed || intro.ended) return
+      void intro.play().catch(() => {
+        if (disposed || attempts >= 10) return
+        attempts += 1
+        playRetryRef.current = window.setTimeout(startIntro, 250)
+      })
     }
 
-    intro.addEventListener('canplay', startIntro)
-    if (intro.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    const readyEvents = ['loadeddata', 'canplay', 'canplaythrough'] as const
+    readyEvents.forEach((eventName) => intro.addEventListener(eventName, startIntro))
+    if (intro.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
       startIntro()
     }
 
-    return () => intro.removeEventListener('canplay', startIntro)
+    return () => {
+      disposed = true
+      readyEvents.forEach((eventName) => intro.removeEventListener(eventName, startIntro))
+      if (playRetryRef.current !== null) {
+        window.clearTimeout(playRetryRef.current)
+      }
+    }
   }, [active])
 
   const handleIntroEnded = () => {
@@ -361,7 +394,18 @@ export function ThirdPageContent({ active }: { active: boolean }) {
     if (loop) {
       loop.currentTime = 0
       setLoopPlaying(false)
-      void loop.play().catch(() => setLoopPlaying(false))
+      let attempts = 0
+      const startLoop = () => {
+        void loop.play().catch(() => {
+          if (attempts >= 10) {
+            setLoopPlaying(false)
+            return
+          }
+          attempts += 1
+          playRetryRef.current = window.setTimeout(startLoop, 250)
+        })
+      }
+      startLoop()
     }
   }
 
