@@ -104,7 +104,7 @@ export function LetterPageContent({
     source === '出阁'
       ? {
           date: '2026/09/26 12:00:00',
-          venue: '重庆市潼南区龙马主题宴会酒店',
+          venue: '重庆市潼南区梓潼街道龙马主题宴会酒店',
           city: '重庆',
         }
       : {

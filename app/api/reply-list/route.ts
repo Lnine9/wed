@@ -1,13 +1,18 @@
-import { cookies } from 'next/headers'
-import { hasReplyAccess, REPLY_ACCESS_COOKIE } from '@/lib/reply-access'
+import { isValidReplyPasscode } from '@/lib/reply-access'
 import { readRsvps } from '@/lib/rsvps'
 
 export const runtime = 'nodejs'
 
-export async function GET() {
-  const token = (await cookies()).get(REPLY_ACCESS_COOKIE)?.value
-  if (!hasReplyAccess(token)) {
-    return Response.json({ message: '请先输入查看口令。' }, { status: 401 })
+export async function POST(request: Request) {
+  let body: { passcode?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return Response.json({ message: '请求格式错误。' }, { status: 400 })
+  }
+
+  if (!isValidReplyPasscode(body.passcode)) {
+    return Response.json({ message: '口令不正确。' }, { status: 401 })
   }
 
   try {

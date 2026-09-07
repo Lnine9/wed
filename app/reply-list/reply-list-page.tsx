@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useRef, useState } from 'react'
 
 type ReplySource = '婚礼' | '出阁'
 
@@ -17,11 +17,46 @@ type ReplyData = {
 
 type ViewState = 'locked' | 'loading' | 'ready' | 'error'
 
+type SheetState =
+  | { mode: 'actions'; index: number }
+  | { mode: 'edit'; index: number }
+  | { mode: 'delete'; index: number }
+  | null
+
+const LONG_PRESS_MS = 480
+
+function describeReply(reply: Reply) {
+  return `「${reply.name} · ${reply.count}人 · ${reply.source}」`
+}
+
 export function ReplyListPage() {
-  const [password, setPassword] = useState('')
+  const [passcode, setPasscode] = useState('')
   const [message, setMessage] = useState('')
   const [state, setState] = useState<ViewState>('locked')
   const [data, setData] = useState<ReplyData | null>(null)
+  const [sheet, setSheet] = useState<SheetState>(null)
+  const [editForm, setEditForm] = useState({
+    count: '',
+    name: '',
+    source: '婚礼' as ReplySource,
+  })
+  const [mutating, setMutating] = useState(false)
+  const [actionError, setActionError] = useState('')
+  const pressTimerRef = useRef<number | null>(null)
+  const pressStartRef = useRef({ x: 0, y: 0 })
+
+  const fetchReplies = async (code: string) => {
+    const response = await fetch('/api/reply-list', {
+      body: JSON.stringify({ passcode: code }),
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+    })
+    const result = (await response.json()) as ReplyData & { message?: string }
+    if (!response.ok) {
+      throw new Error(result.message ?? '暂时无法读取回执。')
+    }
+    return result
+  }
 
   const unlock = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -29,27 +64,114 @@ export function ReplyListPage() {
     setMessage('')
 
     try {
-      const sessionResponse = await fetch('/api/reply-list/session', {
-        body: JSON.stringify({ password }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      })
-      const sessionResult = (await sessionResponse.json()) as { message?: string }
-      if (!sessionResponse.ok) {
-        throw new Error(sessionResult.message ?? '验证失败。')
-      }
-
-      const replyResponse = await fetch('/api/reply-list')
-      const replyResult = (await replyResponse.json()) as ReplyData & { message?: string }
-      if (!replyResponse.ok) {
-        throw new Error(replyResult.message ?? '暂时无法读取回执。')
-      }
-
-      setData(replyResult)
+      const result = await fetchReplies(passcode)
+      setData(result)
       setState('ready')
     } catch (error) {
       setState('error')
       setMessage(error instanceof Error ? error.message : '验证失败。')
+    }
+  }
+
+  const clearPressTimer = () => {
+    if (pressTimerRef.current) {
+      window.clearTimeout(pressTimerRef.current)
+      pressTimerRef.current = null
+    }
+  }
+
+  const openActions = (index: number) => {
+    setActionError('')
+    setSheet({ mode: 'actions', index })
+  }
+
+  const startLongPress = (index: number, event: React.PointerEvent<HTMLTableRowElement>) => {
+    if (event.pointerType === 'mouse') return
+    pressStartRef.current = { x: event.clientX, y: event.clientY }
+    clearPressTimer()
+    pressTimerRef.current = window.setTimeout(() => {
+      pressTimerRef.current = null
+      openActions(index)
+    }, LONG_PRESS_MS)
+  }
+
+  const moveLongPress = (event: React.PointerEvent<HTMLTableRowElement>) => {
+    if (!pressTimerRef.current) return
+    const dx = Math.abs(event.clientX - pressStartRef.current.x)
+    const dy = Math.abs(event.clientY - pressStartRef.current.y)
+    if (dx > 10 || dy > 10) clearPressTimer()
+  }
+
+  const openEdit = (index: number) => {
+    const reply = data?.replies[index]
+    if (!reply) return
+    setEditForm({
+      count: String(reply.count),
+      name: reply.name,
+      source: reply.source,
+    })
+    setActionError('')
+    setSheet({ mode: 'edit', index })
+  }
+
+  const saveEdit = async () => {
+    if (!sheet || sheet.mode !== 'edit') return
+    const count = Number(editForm.count)
+    if (!editForm.name.trim()) {
+      setActionError('姓名不能为空。')
+      return
+    }
+    if (!editForm.count.trim() || !Number.isInteger(count) || count < 1) {
+      setActionError('人数请填写大于等于 1 的整数。')
+      return
+    }
+
+    setMutating(true)
+    setActionError('')
+    try {
+      const response = await fetch('/api/rsvps', {
+        body: JSON.stringify({
+          index: sheet.index,
+          name: editForm.name.trim(),
+          count,
+          source: editForm.source,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PUT',
+      })
+      const result = (await response.json()) as { message?: string }
+      if (!response.ok) {
+        throw new Error(result.message ?? '保存失败，请稍后再试。')
+      }
+      setData(await fetchReplies(passcode))
+      setSheet(null)
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : '保存失败，请稍后再试。')
+    } finally {
+      setMutating(false)
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!sheet || sheet.mode !== 'delete') return
+    setMutating(true)
+    setActionError('')
+    try {
+      const response = await fetch('/api/rsvps', {
+        body: JSON.stringify({ index: sheet.index }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'DELETE',
+      })
+      const result = (await response.json()) as { message?: string }
+      if (!response.ok) {
+        throw new Error(result.message ?? '删除失败，请稍后再试。')
+      }
+      setData(await fetchReplies(passcode))
+      setSheet(null)
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : '删除失败，请稍后再试。')
+    } finally {
+      setMutating(false)
     }
   }
 
@@ -70,8 +192,8 @@ export function ReplyListPage() {
                 placeholder="请输入口令"
                 required
                 type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                value={passcode}
+                onChange={(event) => setPasscode(event.target.value)}
               />
             </label>
             <button disabled={state === 'loading'} type="submit">
@@ -126,7 +248,17 @@ export function ReplyListPage() {
             <tbody>
               {data.replies.length ? (
                 data.replies.map((reply, index) => (
-                  <tr key={`${reply.source}-${reply.name}-${index}`}>
+                  <tr
+                    key={`${reply.source}-${reply.name}-${index}`}
+                    onContextMenu={(event) => {
+                      event.preventDefault()
+                      openActions(index)
+                    }}
+                    onPointerCancel={clearPressTimer}
+                    onPointerDown={(event) => startLongPress(index, event)}
+                    onPointerMove={moveLongPress}
+                    onPointerUp={clearPressTimer}
+                  >
                     <td>{String(index + 1).padStart(2, '0')}</td>
                     <td>{reply.name}</td>
                     <td>{reply.count}</td>
@@ -146,8 +278,160 @@ export function ReplyListPage() {
               )}
             </tbody>
           </table>
+          {data.replies.length > 0 && (
+            <p className="reply-list-hint">长按（或右键）某一行，可编辑或删除该回执。</p>
+          )}
         </div>
       </section>
+
+      {sheet && (
+        <div className="reply-list-sheet" role="dialog" aria-modal="true">
+          <button
+            aria-label="关闭操作面板"
+            className="reply-list-sheet__backdrop"
+            type="button"
+            onClick={() => setSheet(null)}
+          />
+          <div className="reply-list-sheet__panel" onClick={(event) => event.stopPropagation()}>
+            {sheet.mode === 'actions' && (
+              <>
+                <p className="reply-list-sheet__eyebrow">EDIT ENTRY</p>
+                <p className="reply-list-sheet__title">
+                  {describeReply(data.replies[sheet.index])}
+                </p>
+                <div className="reply-list-sheet__actions">
+                  <button
+                    className="reply-list-sheet__button reply-list-sheet__button--primary"
+                    type="button"
+                    onClick={() => openEdit(sheet.index)}
+                  >
+                    编辑这条回执
+                  </button>
+                  <button
+                    className="reply-list-sheet__button reply-list-sheet__button--danger"
+                    type="button"
+                    onClick={() => {
+                      setActionError('')
+                      setSheet({ mode: 'delete', index: sheet.index })
+                    }}
+                  >
+                    删除这条回执
+                  </button>
+                </div>
+              </>
+            )}
+
+            {sheet.mode === 'edit' && (
+              <>
+                <p className="reply-list-sheet__eyebrow">EDIT ENTRY</p>
+                <p className="reply-list-sheet__title">
+                  编辑第 {String(sheet.index + 1).padStart(2, '0')} 条回执
+                </p>
+                <div className="reply-list-sheet__form">
+                  <label className="reply-list-sheet__field">
+                    <span>姓名</span>
+                    <input
+                      disabled={mutating}
+                      maxLength={40}
+                      value={editForm.name}
+                      onChange={(event) =>
+                        setEditForm((form) => ({ ...form, name: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="reply-list-sheet__field">
+                    <span>人数</span>
+                    <input
+                      disabled={mutating}
+                      inputMode="numeric"
+                      min="1"
+                      type="number"
+                      value={editForm.count}
+                      onChange={(event) =>
+                        setEditForm((form) => ({ ...form, count: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <div className="reply-list-sheet__field">
+                    <span>来源</span>
+                    <div className="reply-list-sheet__sources">
+                      {(['婚礼', '出阁'] as const).map((option) => (
+                        <button
+                          aria-pressed={editForm.source === option}
+                          className={`reply-list-sheet__source ${
+                            editForm.source === option ? 'is-active' : ''
+                          }`}
+                          disabled={mutating}
+                          key={option}
+                          type="button"
+                          onClick={() => setEditForm((form) => ({ ...form, source: option }))}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {actionError && (
+                  <p aria-live="polite" className="reply-list-sheet__error" role="alert">
+                    {actionError}
+                  </p>
+                )}
+                <div className="reply-list-sheet__actions">
+                  <button
+                    className="reply-list-sheet__button reply-list-sheet__button--primary"
+                    disabled={mutating}
+                    type="button"
+                    onClick={() => void saveEdit()}
+                  >
+                    {mutating ? '保存中…' : '保存修改'}
+                  </button>
+                  <button
+                    className="reply-list-sheet__button"
+                    disabled={mutating}
+                    type="button"
+                    onClick={() => setSheet(null)}
+                  >
+                    取消
+                  </button>
+                </div>
+              </>
+            )}
+
+            {sheet.mode === 'delete' && (
+              <>
+                <p className="reply-list-sheet__eyebrow">DELETE ENTRY</p>
+                <p className="reply-list-sheet__title">
+                  确认删除{describeReply(data.replies[sheet.index])}？
+                </p>
+                {actionError && (
+                  <p aria-live="polite" className="reply-list-sheet__error" role="alert">
+                    {actionError}
+                  </p>
+                )}
+                <div className="reply-list-sheet__actions">
+                  <button
+                    className="reply-list-sheet__button reply-list-sheet__button--danger"
+                    disabled={mutating}
+                    type="button"
+                    onClick={() => void confirmDelete()}
+                  >
+                    {mutating ? '删除中…' : '确认删除'}
+                  </button>
+                  <button
+                    className="reply-list-sheet__button"
+                    disabled={mutating}
+                    type="button"
+                    onClick={() => setSheet(null)}
+                  >
+                    取消
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   )
 }

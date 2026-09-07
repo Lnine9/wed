@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 export type ReplySource = '婚礼' | '出阁'
@@ -15,7 +15,8 @@ type StoredRsvp = {
   source?: unknown
 }
 
-const DATA_FILE = path.join(process.cwd(), 'data', 'rsvps.json')
+const DATA_DIRECTORY = path.join(process.cwd(), 'data')
+const DATA_FILE = path.join(DATA_DIRECTORY, 'rsvps.json')
 
 export function normalizeReplySource(source: unknown): ReplySource | null {
   if (source === '婚礼' || source === '主页') return '婚礼'
@@ -42,4 +43,32 @@ export async function readRsvps(): Promise<Rsvp[]> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
     throw error
   }
+}
+
+export async function writeRsvps(rsvps: Rsvp[]) {
+  const temporaryFile = `${DATA_FILE}.${crypto.randomUUID()}.tmp`
+  await writeFile(temporaryFile, `${JSON.stringify(rsvps, null, 2)}\n`, 'utf8')
+  await rename(temporaryFile, DATA_FILE)
+}
+
+export async function appendRsvp(reply: Rsvp) {
+  const rsvps = await readRsvps()
+  rsvps.push(reply)
+  await writeRsvps(rsvps)
+}
+
+export async function updateRsvp(index: number, reply: Rsvp) {
+  const rsvps = await readRsvps()
+  if (index < 0 || index >= rsvps.length) return false
+  rsvps[index] = reply
+  await writeRsvps(rsvps)
+  return true
+}
+
+export async function deleteRsvp(index: number) {
+  const rsvps = await readRsvps()
+  if (index < 0 || index >= rsvps.length) return false
+  rsvps.splice(index, 1)
+  await writeRsvps(rsvps)
+  return true
 }

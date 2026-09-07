@@ -424,7 +424,6 @@ export function ThirdPageContent({ active }: { active: boolean }) {
       <button
         aria-label="进入下一页"
         className="scene-third-next-zone"
-        data-deck-control
         data-deck-next
         type="button"
       />
