@@ -73,6 +73,24 @@ export function ReplyListPage() {
     }
   }
 
+  const exportReplies = () => {
+    if (!data) return
+    const pad = (value: number) => String(value).padStart(2, '0')
+    const now = new Date()
+    const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`
+    const blob = new Blob([`${JSON.stringify(data.replies, null, 2)}\n`], {
+      type: 'application/json;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `回执簿-${stamp}.json`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+  }
+
   const clearPressTimer = () => {
     if (pressTimerRef.current) {
       window.clearTimeout(pressTimerRef.current)
@@ -218,7 +236,15 @@ export function ReplyListPage() {
             <p>WEDDING REPLIES · PRIVATE LEDGER</p>
             <h1 id="reply-list-title">赴约回执簿</h1>
           </div>
-          <span>{data.replies.length} 份回执</span>
+          <div className="reply-list-ledger__actions">
+            <span>{data.replies.length} 份回执</span>
+            <button className="reply-list-export" type="button" onClick={exportReplies}>
+              <svg aria-hidden="true" fill="none" viewBox="0 0 16 16">
+                <path d="M8 1.75v8.5m0 0 3.25-3.25M8 10.25 4.75 7M2.25 13.75h11.5" />
+              </svg>
+              导出 JSON
+            </button>
+          </div>
         </header>
 
         <div className="reply-list-summary" aria-label="来源人数汇总">
