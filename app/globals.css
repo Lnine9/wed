@@ -492,9 +492,6 @@ body:has(.letter-page) {
   justify-content: space-between;
   gap: clamp(1rem, 4vh, 2.5rem);
   max-height: var(--letter-vh);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
   width: 100%;
   max-width: 27rem;
   margin: 0 auto;
@@ -503,7 +500,15 @@ body:has(.letter-page) {
   text-align: center;
 }
 
-.letter-page__inner::-webkit-scrollbar {
+/* 仅键盘弹起时启用内层滚动，平时保持非滚动容器以保留翻页手势 */
+.letter-page__inner.is-scrollable {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.letter-page__inner.is-scrollable::-webkit-scrollbar {
   display: none;
 }
 

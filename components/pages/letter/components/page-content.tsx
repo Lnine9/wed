@@ -24,12 +24,15 @@ export function LetterPageContent({
 }) {
   const reduceMotion = useReducedMotion()
   const [name, setName] = useState('')
-  const [count, setCount] = useState('1')
+  const [count, setCount] = useState('')
   const [status, setStatus] = useState<SubmissionState>('idle')
   const [message, setMessage] = useState('')
   const stageRef = useRef<HTMLElement>(null)
 
-  // 键盘弹起时 visualViewport 收缩，同步给容器，让内容高度真正自适应
+  const [keyboardMode, setKeyboardMode] = useState(false)
+
+  // 键盘弹起时 visualViewport 收缩，同步给容器；仅在键盘模式下允许内层滚动
+  // （平时若为滚动容器，iOS 会因触摸滚动触发 pointercancel，劫持翻页手势）
   useEffect(() => {
     const stage = stageRef.current
     const viewport = window.visualViewport
@@ -37,6 +40,7 @@ export function LetterPageContent({
 
     const syncHeight = () => {
       stage.style.setProperty('--letter-vh', `${viewport.height}px`)
+      setKeyboardMode(viewport.height < window.innerHeight - 120)
     }
     syncHeight()
     viewport.addEventListener('resize', syncHeight)
@@ -62,6 +66,11 @@ export function LetterPageContent({
     if (!trimmedName) {
       setStatus('error')
       setMessage('请留下您的姓名。')
+      return
+    }
+    if (count.trim() === '') {
+      setStatus('error')
+      setMessage('请填写人数。')
       return
     }
     if (!Number.isInteger(guestCount) || guestCount < 1) {
@@ -95,7 +104,7 @@ export function LetterPageContent({
     source === '出阁'
       ? {
           date: '2026/09/26 12:00:00',
-          venue: '重庆市潼南区梓潼街道龙马大酒店',
+          venue: '重庆市潼南区龙马主题宴会酒店',
           city: '重庆',
         }
       : {
@@ -208,7 +217,9 @@ export function LetterPageContent({
       />
       <div aria-hidden="true" className="letter-page__shade" />
 
-      <article className="letter-page__inner">
+      <article
+        className={`letter-page__inner${keyboardMode ? ' is-scrollable' : ''}`}
+      >
         <div className="letter-page__top">
           <motion.p className="letter-page__eyebrow" {...enter(0.1)}>
             {source === '出阁' ? '出阁之宴' : '婚礼之约'} · AN INVITATION
@@ -287,6 +298,7 @@ export function LetterPageContent({
                 inputMode="numeric"
                 min="1"
                 name="count"
+                placeholder="赴宴人数"
                 required
                 type="number"
                 value={count}
