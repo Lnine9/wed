@@ -1,14 +1,58 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, FocusEvent, useEffect, useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
+
+const EASE_OUT = [0.16, 1, 0.3, 1] as const
+
+const POEM_LINES = [
+  '灵魂叠放。不可分离，亦不可吞没',
+  '这是危险的术法，也是他们唯一愿学的',
+  '星夜的前路没有赐福，仅有彼此',
+] as const
+
+const CALL_LINE = '请来，见证这次远行！'
 
 type SubmissionState = 'idle' | 'sending' | 'success' | 'error'
 
-export function LetterPageContent({ source }: { source: '婚礼' | '出阁' }) {
+export function LetterPageContent({
+  active,
+  source,
+}: {
+  active: boolean
+  source: '婚礼' | '出阁'
+}) {
+  const reduceMotion = useReducedMotion()
   const [name, setName] = useState('')
   const [count, setCount] = useState('1')
   const [status, setStatus] = useState<SubmissionState>('idle')
   const [message, setMessage] = useState('')
+  const stageRef = useRef<HTMLElement>(null)
+
+  // 键盘弹起时 visualViewport 收缩，同步给容器，让内容高度真正自适应
+  useEffect(() => {
+    const stage = stageRef.current
+    const viewport = window.visualViewport
+    if (!stage || !viewport) return
+
+    const syncHeight = () => {
+      stage.style.setProperty('--letter-vh', `${viewport.height}px`)
+    }
+    syncHeight()
+    viewport.addEventListener('resize', syncHeight)
+    return () => viewport.removeEventListener('resize', syncHeight)
+  }, [])
+
+  // 聚焦时等键盘弹起后，把输入框滚进可视区
+  const focusInput = (event: FocusEvent<HTMLInputElement>) => {
+    const target = event.target
+    window.setTimeout(() => {
+      target.scrollIntoView({
+        block: 'center',
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      })
+    }, 260)
+  }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -39,108 +83,123 @@ export function LetterPageContent({ source }: { source: '婚礼' | '出阁' }) {
         throw new Error(result.message ?? '发送失败，请稍后再试。')
       }
       setStatus('success')
-      setMessage('回执已收到，婚礼当天见。')
+      setMessage('回执已收到，星夜再会。')
     } catch (error) {
       setStatus('error')
       setMessage(error instanceof Error ? error.message : '发送失败，请稍后再试。')
     }
   }
 
-  return (
-    <section aria-label="婚礼邀请信" className="letter-page">
-      <div className="letter-page__grain" />
-      <article className="letter-page__paper">
-        <header className="letter-page__header">
-          <p>❤️ 囍 · We&apos;re married · 囍 ❤️</p>
-          <h1>我们结婚啦</h1>
-          <span aria-hidden="true" />
-        </header>
+  const isReadOnly = status === 'sending' || status === 'success'
+  const enter = (delay: number) => ({
+    initial: { opacity: 0, y: reduceMotion ? 0 : 16 },
+    animate: active ? { opacity: 1, y: 0 } : { opacity: 0, y: reduceMotion ? 0 : 16 },
+    transition: {
+      delay: reduceMotion ? 0 : delay,
+      duration: reduceMotion ? 0.01 : 1.05,
+      ease: EASE_OUT,
+    },
+  })
 
-        <div className="letter-page__body">
-          <p>喜乐共赏，岁月悠长</p>
-          <p>缘起朝夕，相伴四时</p>
-          <p>
-            诚邀您携家人，莅临现场，见证我们的重要时刻✨
-            <br />
-            静候相逢
-          </p>
+  return (
+    <section aria-label="邀请回执" className="letter-page" ref={stageRef}>
+      <div aria-hidden="true" className="letter-page__stars" />
+
+      <article className="letter-page__inner">
+        <motion.p className="letter-page__eyebrow" {...enter(0.1)}>
+          {source === '出阁' ? '出阁之约' : '婚礼之约'} · AN INVITATION
+        </motion.p>
+
+        <div className="letter-page__poem">
+          {POEM_LINES.map((line, index) => (
+            <motion.p
+              className="letter-page__line"
+              key={line}
+              {...enter(0.32 + index * 0.26)}
+            >
+              {line}
+            </motion.p>
+          ))}
+          <motion.p
+            className="letter-page__line letter-page__line--call"
+            {...enter(0.32 + POEM_LINES.length * 0.26)}
+          >
+            {CALL_LINE}
+          </motion.p>
         </div>
 
-        <dl className="letter-page__event">
-          <div>
-            <dt>🤵 新郎</dt>
-            <dd>王先生</dd>
-          </div>
-          <div>
-            <dt>👰 新娘</dt>
-            <dd>李小姐</dd>
-          </div>
-          <div>
-            <dt>📆 时间</dt>
-            <dd>2023年5月20日 午宴（星期六）</dd>
-          </div>
-          <div>
-            <dt>📍 地点</dt>
-            <dd>XXX酒店‑X楼X厅</dd>
-          </div>
-        </dl>
+        <motion.div aria-hidden="true" className="letter-page__rule" {...enter(1.3)} />
 
-        <section className="letter-page__notes" aria-labelledby="letter-tips">
-          <h2 id="letter-tips">💡 温馨提示</h2>
-          <ol>
-            <li>推荐浅色系穿搭，合影会更加出片。</li>
-            <li>若您赴约，带上好心情和好胃口，我们婚礼相见。</li>
-            <li>倘若路途遥远、诸事繁忙无法亲临，遥寄一份祝福，亦感念于心。山海自有归期，期待他日相逢。</li>
-            <li>当日宾客繁多，难免招待不周，望诸位多多包涵。</li>
-          </ol>
-        </section>
-
-        <form className="letter-page__rsvp" data-deck-control onSubmit={submit}>
-          <div className="letter-page__rsvp-heading">
-            <p>RSVP</p>
-            <h2>赴约回执</h2>
+        <motion.dl className="letter-page__meta" {...enter(1.42)}>
+          <div>
+            <dt>时间</dt>
+            <dd>敬请期待</dd>
           </div>
-          <div className="letter-page__rsvp-fields">
-            <label>
+          <div>
+            <dt>地点</dt>
+            <dd>敬请期待</dd>
+          </div>
+        </motion.dl>
+
+        <motion.form
+          className="letter-page__rsvp"
+          data-deck-control
+          onSubmit={submit}
+          {...enter(1.56)}
+        >
+          <p className="letter-page__rsvp-label">RSVP · 赴约回执</p>
+          <div className="letter-page__fields">
+            <label className="letter-page__field">
               <span>姓名</span>
               <input
                 autoComplete="name"
-                disabled={status === 'sending' || status === 'success'}
+                disabled={isReadOnly}
                 maxLength={40}
                 name="name"
-                placeholder="请填写您的姓名"
+                placeholder="请留下姓名"
                 required
                 value={name}
+                onFocus={focusInput}
                 onChange={(event) => setName(event.target.value)}
               />
             </label>
-            <label>
+            <label className="letter-page__field">
               <span>人数</span>
               <input
-                disabled={status === 'sending' || status === 'success'}
+                disabled={isReadOnly}
                 inputMode="numeric"
                 min="1"
                 name="count"
                 required
                 type="number"
                 value={count}
+                onFocus={focusInput}
                 onChange={(event) => setCount(event.target.value)}
               />
             </label>
           </div>
-          <button disabled={status === 'sending' || status === 'success'} type="submit">
-            {status === 'sending' ? '发送中…' : status === 'success' ? '已发送' : '发送回执'}
+          <button className="letter-page__submit" disabled={isReadOnly} type="submit">
+            <span>
+              {status === 'sending'
+                ? '回执寄出中'
+                : status === 'success'
+                  ? '已收到回执'
+                  : '寄出回执'}
+            </span>
+            <svg aria-hidden="true" fill="none" viewBox="0 0 24 12">
+              <path d="M0 6h22m0 0L17 1m5 5l-5 5" />
+            </svg>
           </button>
           {message && (
             <p
               aria-live="polite"
-              className={`letter-page__form-message is-${status}`}
+              className={`letter-page__message is-${status}`}
               role={status === 'error' ? 'alert' : undefined}
             >
               {message}
             </p>
           )}
-        </form>
+        </motion.form>
       </article>
     </section>
   )

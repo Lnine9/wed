@@ -59,7 +59,12 @@ function PageContent({
   if (index === 1) return <FirstPage active={active} />
   if (index === 2) return <SecondPage active={active} />
   if (index === 3) return <ThirdPage active={active} />
-  return <LetterPage source={coverVariant === 'cover2' ? '出阁' : '婚礼'} />
+  return (
+    <LetterPage
+      active={active}
+      source={coverVariant === 'cover2' ? '出阁' : '婚礼'}
+    />
+  )
 }
 
 export function PageDeck() {

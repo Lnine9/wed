@@ -438,229 +438,301 @@
   }
 }
 
+/* === 邀请回执页：星夜诗体（暗色） === */
+body:has(.letter-page) {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .letter-page {
+  --letter-vh: 100dvh;
   position: relative;
+  display: flex;
   height: 100dvh;
   overflow: hidden;
+  line-height: 1.5;
   background:
-    linear-gradient(90deg, rgb(106 91 62 / 0.035) 1px, transparent 1px),
-    linear-gradient(rgb(106 91 62 / 0.025) 1px, transparent 1px),
-    #f4f0e4;
-  background-size: 1.1rem 1.1rem;
+    radial-gradient(ellipse 130% 60% at 50% -12%, #17223c 0%, transparent 62%),
+    linear-gradient(to bottom, #0a0e1a 0%, #0c1222 54%, #070a13 100%);
+  color: #f2f4f8;
 }
 
-.letter-page__grain {
+.letter-page__stars {
   position: absolute;
   inset: 0;
-  opacity: 0.42;
   pointer-events: none;
   background-image:
-    repeating-linear-gradient(0deg, transparent 0 3px, rgb(69 65 50 / 0.045) 3px 4px),
-    repeating-linear-gradient(90deg, transparent 0 5px, rgb(69 65 50 / 0.035) 5px 6px);
+    radial-gradient(1px 1px at 18% 22%, rgb(242 244 248 / 0.6) 50%, transparent 51%),
+    radial-gradient(1px 1px at 64% 12%, rgb(242 244 248 / 0.38) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 82% 30%, rgb(242 244 248 / 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 38% 8%, rgb(242 244 248 / 0.34) 50%, transparent 51%),
+    radial-gradient(1px 1px at 90% 58%, rgb(242 244 248 / 0.26) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 12% 46%, rgb(242 244 248 / 0.32) 50%, transparent 51%),
+    radial-gradient(1px 1px at 52% 38%, rgb(242 244 248 / 0.24) 50%, transparent 51%),
+    radial-gradient(1px 1px at 72% 66%, rgb(242 244 248 / 0.2) 50%, transparent 51%);
+  background-repeat: no-repeat;
 }
 
-.letter-page__paper {
+.letter-page__inner {
   position: relative;
   z-index: 1;
-  display: grid;
-  width: min(100%, 48rem);
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  max-height: var(--letter-vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  width: 100%;
+  max-width: 27rem;
   margin: 0 auto;
-  align-content: space-between;
-  overflow: hidden;
-  padding: max(1rem, env(safe-area-inset-top)) clamp(1rem, 5.5vw, 3.5rem)
-    max(1rem, env(safe-area-inset-bottom));
-  color: #26333d;
-}
-
-.letter-page__header {
+  padding: max(1.6rem, env(safe-area-inset-top)) clamp(1.25rem, 6vw, 2.5rem)
+    max(1.6rem, env(safe-area-inset-bottom));
   text-align: center;
 }
 
-.letter-page__header p,
-.letter-page__rsvp-heading p {
-  margin: 0;
-  color: #a84a3d;
-  font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.62rem, 2.3vw, 0.88rem);
-  letter-spacing: 0.1em;
+.letter-page__inner::-webkit-scrollbar {
+  display: none;
 }
 
-.letter-page__header h1 {
-  margin: 0.45rem 0 0.4rem;
-  color: #1b365d;
+.letter-page__eyebrow {
+  margin: 0 0 clamp(0.8rem, 2.8vh, 1.6rem);
+  line-height: 1.4;
+  color: rgb(242 244 248 / 0.5);
   font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(1.9rem, 8vw, 3.4rem);
-  font-weight: 400;
+  font-size: clamp(0.6rem, 2.2vw, 0.78rem);
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+}
+
+.letter-page__poem {
+  display: grid;
+  gap: clamp(0.35rem, 1.6vh, 0.85rem);
+  margin: 0;
+}
+
+.letter-page__line {
+  margin: 0;
+  color: rgb(242 244 248 / 0.82);
+  font-family: 'WangHanZongXiXinSong', serif;
+  font-size: clamp(0.92rem, 3.4vw, 1.1rem);
   letter-spacing: 0.14em;
+  line-height: 1.62;
 }
 
-.letter-page__header > span {
-  display: block;
-  width: min(8rem, 38%);
+.letter-page__line--call {
+  margin-top: clamp(0.55rem, 2.4vh, 1.3rem);
+  color: #f7f9fc;
+  font-size: clamp(1.28rem, 5vw, 1.66rem);
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+}
+
+.letter-page__rule {
+  width: 2.4rem;
   height: 1px;
-  margin: 0 auto;
-  background: #a84a3d;
+  margin: clamp(0.8rem, 3vh, 1.7rem) auto;
+  background: rgb(242 244 248 / 0.3);
 }
 
-.letter-page__body {
-  margin: 0.55rem 0;
+.letter-page__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 2.2rem;
+  margin: 0 0 clamp(0.9rem, 3.4vh, 2rem);
+  line-height: 1.4;
   font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.9rem, 3.5vw, 1.2rem);
-  letter-spacing: 0.08em;
-  line-height: 1.45;
-  text-align: center;
 }
 
-.letter-page__body p {
-  margin: 0.12rem 0;
+.letter-page__meta div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
 }
 
-.letter-page__body p:last-child {
-  margin-top: 0.45rem;
-  color: #1b365d;
-}
-
-.letter-page__event {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.22rem 0.6rem;
+.letter-page__meta dt {
   margin: 0;
-  padding: 0.45rem 0;
-  font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.78rem, 3vw, 1.05rem);
-  line-height: 1.35;
+  color: rgb(242 244 248 / 0.45);
+  font-size: clamp(0.72rem, 2.6vw, 0.85rem);
+  letter-spacing: 0.3em;
 }
 
-.letter-page__event div {
-  display: contents;
-}
-
-.letter-page__event dt {
-  color: #1b365d;
-  white-space: nowrap;
-}
-
-.letter-page__event dd {
+.letter-page__meta dd {
   margin: 0;
-}
-
-.letter-page__notes {
-  margin: 0.35rem 0;
-  color: rgb(38 51 61 / 0.62);
-}
-
-.letter-page__notes h2,
-.letter-page__rsvp h2 {
-  margin: 0;
-  color: #1b365d;
-  font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(1rem, 3.8vw, 1.45rem);
-  font-weight: 400;
-  letter-spacing: 0.1em;
-}
-
-.letter-page__notes ol {
-  margin: 0.25rem 0 0;
-  padding-left: 1rem;
-  font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.58rem, 2.15vw, 0.82rem);
-  line-height: 1.25;
-}
-
-.letter-page__notes li + li {
-  margin-top: 0.12rem;
+  color: rgb(242 244 248 / 0.78);
+  font-size: clamp(0.78rem, 2.8vw, 0.92rem);
+  letter-spacing: 0.2em;
 }
 
 .letter-page__rsvp {
   display: grid;
-  gap: 0.35rem;
-  padding-top: 0.25rem;
+  gap: clamp(0.5rem, 1.8vh, 0.9rem);
+  width: min(100%, 20rem);
 }
 
-.letter-page__rsvp-heading {
-  margin-bottom: 0;
-}
-
-.letter-page__rsvp-heading p {
-  margin-bottom: 0.05rem;
-}
-
-.letter-page__rsvp-fields {
-  display: grid;
-  grid-template-columns: 1fr 0.55fr;
-  gap: 0.5rem;
-}
-
-.letter-page__rsvp label {
-  display: grid;
-  gap: 0.12rem;
-  color: #1b365d;
+.letter-page__rsvp-label {
+  margin: 0;
+  line-height: 1.4;
+  color: rgb(242 244 248 / 0.5);
   font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.72rem, 2.6vw, 0.95rem);
-  letter-spacing: 0.08em;
+  font-size: clamp(0.6rem, 2.2vw, 0.75rem);
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
 }
 
-.letter-page__rsvp input {
-  min-height: 2rem;
+.letter-page__fields {
+  display: grid;
+  grid-template-columns: 1fr 4.6rem;
+  gap: 1.1rem;
+  align-items: end;
+}
+
+.letter-page__field {
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.letter-page__field span {
+  line-height: 1.4;
+  color: rgb(242 244 248 / 0.45);
+  font-family: 'WangHanZongXiXinSong', serif;
+  font-size: clamp(0.68rem, 2.4vw, 0.8rem);
+  letter-spacing: 0.28em;
+}
+
+.letter-page__field input {
+  min-height: 1.9rem;
+  border: 0;
+  border-bottom: 1px solid rgb(242 244 248 / 0.28);
   border-radius: 0;
   outline: none;
-  background: rgb(27 54 93 / 0.06);
-  color: #26333d;
+  background: transparent;
+  color: #f2f4f8;
+  caret-color: #f2f4f8;
   font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.82rem, 3vw, 1.05rem);
-  padding: 0.2rem 0.45rem;
+  font-size: clamp(0.92rem, 3.2vw, 1.05rem);
+  letter-spacing: 0.12em;
+  padding: 0.25rem 0;
+  transition: border-color 220ms ease;
+  appearance: none;
 }
 
-.letter-page__rsvp input:focus-visible {
-  outline: 2px solid #a84a3d;
-  outline-offset: 2px;
+.letter-page__field input::-webkit-outer-spin-button,
+.letter-page__field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-.letter-page__rsvp button {
-  min-height: 2rem;
-  margin-top: 0.1rem;
-  border: 0;
+.letter-page__field input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.letter-page__field input::placeholder {
+  color: rgb(242 244 248 / 0.28);
+}
+
+.letter-page__field input:focus-visible {
+  border-bottom-color: rgb(242 244 248 / 0.85);
+}
+
+.letter-page__field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.letter-page__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  min-height: 2.45rem;
+  margin-top: 0.35rem;
+  line-height: 1;
+  border: 1px solid rgb(242 244 248 / 0.38);
   border-radius: 0;
-  background: #1b365d;
-  color: #f4f0e4;
+  background: transparent;
+  color: #f2f4f8;
   cursor: pointer;
   font-family: 'WangHanZongXiXinSong', serif;
-  font-size: clamp(0.9rem, 3vw, 1.1rem);
-  letter-spacing: 0.18em;
-  transition: background 180ms ease, color 180ms ease;
+  font-size: clamp(0.85rem, 3vw, 1rem);
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  transition: background 240ms ease, border-color 240ms ease, color 240ms ease;
+}
+
+.letter-page__submit svg {
+  width: 1.4rem;
+  height: auto;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
 
 @media (hover: hover) {
-  .letter-page__rsvp button:hover:not(:disabled) {
-    background: transparent;
-    color: #1b365d;
+  .letter-page__submit:hover:not(:disabled) {
+    background: #f2f4f8;
+    border-color: #f2f4f8;
+    color: #0a0e1a;
   }
 }
 
-.letter-page__rsvp button:focus-visible {
-  outline: 2px solid #a84a3d;
-  outline-offset: 3px;
+.letter-page__submit:focus-visible {
+  outline: 1px solid rgb(242 244 248 / 0.8);
+  outline-offset: 4px;
 }
 
-.letter-page__rsvp button:disabled {
+.letter-page__submit:disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.45;
 }
 
-.letter-page__form-message {
+.letter-page__message {
   margin: 0;
   font-family: 'WangHanZongXiXinSong', serif;
-  font-size: 0.78rem;
-  line-height: 1.2;
+  font-size: clamp(0.72rem, 2.6vw, 0.85rem);
+  letter-spacing: 0.18em;
+  line-height: 1.4;
 }
 
-.letter-page__form-message.is-success {
-  color: #3f6f54;
+.letter-page__message.is-success {
+  color: #9fc3ab;
 }
 
-.letter-page__form-message.is-error {
-  color: #a84a3d;
+.letter-page__message.is-error {
+  color: #d98a76;
+}
+
+@media (max-height: 680px) {
+  .letter-page__line {
+    font-size: clamp(0.8rem, 2.8vw, 0.94rem);
+    line-height: 1.55;
+  }
+  .letter-page__line--call {
+    font-size: clamp(1.02rem, 4vw, 1.3rem);
+  }
+  .letter-page__poem {
+    gap: 0.3rem;
+  }
+  .letter-page__eyebrow {
+    margin-bottom: 0.6rem;
+  }
+  .letter-page__rule {
+    margin-top: 0.65rem;
+    margin-bottom: 0.65rem;
+  }
+  .letter-page__meta {
+    margin-bottom: 0.8rem;
+  }
+  .letter-page__submit {
+    min-height: 2.3rem;
+  }
 }
 
 .reply-list-page {
