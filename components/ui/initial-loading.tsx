@@ -2,15 +2,56 @@
 
 import { useEffect, useState } from 'react'
 
+const PRELOAD_IMAGES = [
+  '/assets/主背景2.jpg',
+  '/assets/橄榄.png',
+  '/assets/主背景.jpg',
+  '/assets/百合.png',
+  '/assets/同桌背景.jpg',
+  '/assets/同桌桌子.jpg',
+  '/assets/猪1.png',
+  '/assets/猪2.png',
+  '/assets/左.png',
+  '/assets/右.png',
+  '/assets/film-frame.png',
+  '/assets/合照.jpg',
+  '/assets/毕业合照1.jpg',
+  '/assets/毕业合照2.jpg',
+  '/assets/背景2.png',
+  '/assets/山1.png',
+  '/assets/山.png',
+  '/assets/山上爱心.jpg',
+  '/assets/山顶合照.jpg',
+  '/assets/干杯.jpg',
+  '/assets/洗象池合照.jpg',
+  '/assets/373071788235267_.pic_web.webp',
+  '/assets/373081788235278_.pic_web.webp',
+  '/assets/373091788235284_.pic_web.webp',
+  '/assets/373171788235332_.pic_web.webp',
+  '/assets/373191788235347_.pic_web.webp',
+  '/assets/视频首帧.jpg',
+  '/assets/星夜.jpg',
+] as const
+
 export function InitialLoading() {
   const [isLeaving, setIsLeaving] = useState(false)
   const [isMounted, setIsMounted] = useState(true)
 
   useEffect(() => {
+    const preloadedImages = PRELOAD_IMAGES.map((src) => {
+      const image = new Image()
+      image.decoding = 'async'
+      image.src = src
+      return image
+    })
     const leaveTimer = window.setTimeout(() => setIsLeaving(true), 4000)
     const removeTimer = window.setTimeout(() => setIsMounted(false), 4550)
 
     return () => {
+      preloadedImages.forEach((image) => {
+        image.onload = null
+        image.onerror = null
+      })
       window.clearTimeout(leaveTimer)
       window.clearTimeout(removeTimer)
     }

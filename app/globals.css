@@ -968,6 +968,7 @@ body:has(.letter-page) {
 .letter-page__submit {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -987,23 +988,19 @@ body:has(.letter-page) {
   transition: border-color 380ms ease;
 }
 
-/* 白色填充层：hover 从左侧滑入（origin: left），移开向右侧滑出（origin: right） */
+/* 白色填充层：自动循环——从左滑入、短暂停留、向右滑出，随后静默约 2s */
 .letter-page__submit::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: #f2f4f8;
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 360ms cubic-bezier(0.25, 1, 0.5, 1);
+  background: rgb(242 244 248 / 0.95);
+  transform: translateX(-101%);
+  animation: letter-submit-sweep 3.6s cubic-bezier(0.45, 0, 0.25, 1) 0.6s infinite;
 }
 
-.letter-page__submit:hover:not(:disabled)::before,
-.letter-page__submit:focus-visible::before {
-  transform: scaleX(1);
-  transform-origin: left;
-  transition-duration: 480ms;
+.letter-page__submit:disabled::before {
+  animation: none;
 }
 
 /* 文字与箭头：difference 混合，填充扫过之处即时反色为黑 */
@@ -1025,23 +1022,27 @@ body:has(.letter-page) {
   fill: none;
 }
 
-@media (hover: hover) {
-  .letter-page__submit:hover:not(:disabled) {
-    border-color: #f2f4f8;
+@keyframes letter-submit-sweep {
+  0% {
+    transform: translateX(-101%);
   }
-}
-
-@media (hover: none) {
-  .letter-page__submit:active:not(:disabled)::before {
-    transform: scaleX(1);
-    transform-origin: left;
-    transition-duration: 260ms;
+  16% {
+    transform: translateX(0);
+  }
+  26% {
+    transform: translateX(0);
+  }
+  42% {
+    transform: translateX(101%);
+  }
+  100% {
+    transform: translateX(101%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .letter-page__submit::before {
-    transition-duration: 0.01ms;
+    animation: none;
   }
 }
 
