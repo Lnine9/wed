@@ -153,46 +153,22 @@ export function LetterPageContent({
     showToast(copied ? '地址已复制，请打开地图粘贴搜索' : '复制失败，请手动记录地址')
   }
 
-  // 挨个尝试：高德App → 百度App → 高德H5 → 复制地址
+  // 直接打开高德地图网页（不尝试调起 App）
   const openNavigation = () => {
     showToast('正在打开地图…', { pending: true, duration: 4600 })
     const keyword = encodeURIComponent(eventInfo.venue)
     const city = encodeURIComponent(eventInfo.city)
-    const amapH5 = `https://uri.amap.com/search?keyword=${keyword}&city=${city}&view=map&callnative=1&src=wed`
-    const amapScheme = `androidamap://keywordSearch?keyword=${keyword}&city=${city}&sourceApplication=wed`
-    const baiduScheme = `baidumap://map/place/search?query=${keyword}&region=${city}&src=wed`
+    const amapUrl = `https://uri.amap.com/search?keyword=${keyword}&city=${city}&view=map&src=wed`
 
-    const ua = navigator.userAgent
-    const isAndroid = /android/i.test(ua)
-    const isIOS = /iphone|ipad|ipod/i.test(ua)
-
-    if (!isAndroid && !isIOS) {
-      // 桌面：直接开高德网页版
-      const win = window.open(amapH5, '_blank', 'noopener')
-      if (!win) void copyVenue()
+    if (/android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
+      // 手机：当前页直接跳转高德地图网页
+      window.location.href = amapUrl
       return
     }
 
-    if (isIOS) {
-      // iOS：uri.amap.com 官方中转，装了高德会自动唤起 App，没装则打开 H5
-      window.location.href = amapH5
-      return
-    }
-
-    // Android：scheme 未注册时静默失败，用延时逐个尝试
-    window.location.href = amapScheme
-    window.setTimeout(() => {
-      if (document.visibilityState !== 'visible') return
-      window.location.href = baiduScheme
-      window.setTimeout(() => {
-        if (document.visibilityState !== 'visible') return
-        window.location.href = amapH5
-        window.setTimeout(() => {
-          if (document.visibilityState !== 'visible') return
-          void copyVenue()
-        }, 1800)
-      }, 1200)
-    }, 1200)
+    // 桌面：新窗口打开，被拦截则复制地址
+    const win = window.open(amapUrl, '_blank', 'noopener')
+    if (!win) void copyVenue()
   }
 
   const enter = (delay: number) => ({
