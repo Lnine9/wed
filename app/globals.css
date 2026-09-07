@@ -190,6 +190,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -1901,6 +1905,71 @@ body:has(.letter-page) {
 }
 
 @media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  .cover-page__names,
+  .cover-page__heading p,
+  .first-page__eyebrow,
+  .first-page__heading p,
+  .second-page__eyebrow,
+  .second-page__heading p,
+  .letter-page__eyebrow,
+  .letter-page__line,
+  .letter-page__meta dt,
+  .letter-page__meta dd,
+  .reply-list-lock__eyebrow,
+  .reply-list-lock__copy,
+  .reply-list-ledger__header > span,
+  .reply-list-table-wrap table,
+  .scene-third-scroll-cue__content {
+    font-size: 0.9rem;
+  }
+
+  .cover-page__heading h1 {
+    font-size: 2.7rem;
+  }
+
+  .cover-page__heading p {
+    font-size: 0.95rem;
+  }
+
+  .first-page__heading h1,
+  .second-page__heading h1 {
+    font-size: 2.1rem;
+  }
+
+  .letter-page__line--call {
+    font-size: 1.25rem;
+  }
+
+  .scene-poem,
+  .scene-video-poem {
+    --poem-size: 1.75rem;
+  }
+
+  .reply-list-lock h1,
+  .reply-list-ledger h1 {
+    font-size: 2.5rem;
+  }
+
+  .reply-list-lock__form label {
+    font-size: 0.9rem;
+  }
+
+  .reply-list-lock__form input {
+    font-size: 1.1rem;
+  }
+
+  .reply-list-lock__form button {
+    font-size: 1rem;
+  }
+
+  .reply-list-summary__item strong {
+    font-size: 3.2rem;
+  }
+
   .scene-video-poem__line--1 {
     letter-spacing: 0.12em;
   }
@@ -1935,7 +2004,6 @@ body:has(.letter-page) {
   .scene-album__hero {
     height: min(58dvh, 28rem);
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
