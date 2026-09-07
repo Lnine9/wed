@@ -919,7 +919,7 @@ body:has(.letter-page) {
   line-height: 1.4;
   color: rgb(242 244 248);
   font-family: 'Songti SC', 'STSong', 'SimSun', '宋体', serif;
-  font-size: clamp(0.76rem, 2.7vw, 0.9rem);
+  font-size: clamp(0.96rem, 3vw, 1.2rem);
   letter-spacing: 0.28em;
 }
 
@@ -966,6 +966,8 @@ body:has(.letter-page) {
 }
 
 .letter-page__submit {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -982,7 +984,34 @@ body:has(.letter-page) {
   font-size: clamp(0.95rem, 3.3vw, 1.1rem);
   letter-spacing: 0.4em;
   text-indent: 0.4em;
-  transition: background 240ms ease, border-color 240ms ease, color 240ms ease;
+  transition: border-color 380ms ease;
+}
+
+/* 白色填充层：hover 从左侧滑入（origin: left），移开向右侧滑出（origin: right） */
+.letter-page__submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #f2f4f8;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 360ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.letter-page__submit:hover:not(:disabled)::before,
+.letter-page__submit:focus-visible::before {
+  transform: scaleX(1);
+  transform-origin: left;
+  transition-duration: 480ms;
+}
+
+/* 文字与箭头：difference 混合，填充扫过之处即时反色为黑 */
+.letter-page__submit > span,
+.letter-page__submit > svg {
+  position: relative;
+  z-index: 1;
+  mix-blend-mode: difference;
 }
 
 .letter-page__submit svg {
@@ -998,9 +1027,21 @@ body:has(.letter-page) {
 
 @media (hover: hover) {
   .letter-page__submit:hover:not(:disabled) {
-    background: #f2f4f8;
     border-color: #f2f4f8;
-    color: #0a0e1a;
+  }
+}
+
+@media (hover: none) {
+  .letter-page__submit:active:not(:disabled)::before {
+    transform: scaleX(1);
+    transform-origin: left;
+    transition-duration: 260ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letter-page__submit::before {
+    transition-duration: 0.01ms;
   }
 }
 

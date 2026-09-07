@@ -105,12 +105,12 @@ export function LetterPageContent({
       ? {
           date: '2026/09/26 12:00:00',
           venue: '重庆市潼南区梓潼街道龙马主题宴会酒店',
-          city: '重庆',
+          coord: '105.84,30.16',
         }
       : {
           date: '2026/10/05 12:00:00',
           venue: '山东省济宁市任城区八方斋车站西路店',
-          city: '济宁',
+          coord: '116.55,35.38',
         }
   const [toast, setToast] = useState<{ text: string; pending?: boolean } | null>(null)
   const toastTimerRef = useRef<number | null>(null)
@@ -153,11 +153,10 @@ export function LetterPageContent({
     showToast(copied ? '地址已复制，请打开地图粘贴搜索' : '复制失败，请手动记录地址')
   }
 
-  // 直接打开高德地图网页（不尝试调起 App）
+  // 直接打开高德地图网页（不尝试调起 App），按坐标进入路线规划
   const openNavigation = () => {
-    const keyword = encodeURIComponent(eventInfo.venue)
-    const city = encodeURIComponent(eventInfo.city)
-    const amapUrl = `https://uri.amap.com/search?keyword=${keyword}&city=${city}&view=map&src=wed`
+    const name = encodeURIComponent(eventInfo.venue)
+    const amapUrl = `https://uri.amap.com/navigation?to=${eventInfo.coord},${name}&mode=car&src=wed`
 
     if (/android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
       // 手机：当前页直接跳转高德地图网页
