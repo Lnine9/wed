@@ -155,7 +155,6 @@ export function LetterPageContent({
 
   // 直接打开高德地图网页（不尝试调起 App）
   const openNavigation = () => {
-    showToast('正在打开地图…', { pending: true, duration: 4600 })
     const keyword = encodeURIComponent(eventInfo.venue)
     const city = encodeURIComponent(eventInfo.city)
     const amapUrl = `https://uri.amap.com/search?keyword=${keyword}&city=${city}&view=map&src=wed`
