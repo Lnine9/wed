@@ -83,7 +83,7 @@ export function LetterPageContent({
         throw new Error(result.message ?? '发送失败，请稍后再试。')
       }
       setStatus('success')
-      setMessage('回执已收到，星夜再会。')
+      setMessage('')
     } catch (error) {
       setStatus('error')
       setMessage(error instanceof Error ? error.message : '发送失败，请稍后再试。')
