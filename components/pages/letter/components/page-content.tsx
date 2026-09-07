@@ -109,7 +109,7 @@ export function LetterPageContent({
         }
       : {
           date: '2026/10/05 12:00:00',
-          venue: '山东省济宁市八方斋（车站西路店）',
+          venue: '山东省济宁市任城区八方斋车站西路店',
           city: '济宁',
         }
   const [toast, setToast] = useState<{ text: string; pending?: boolean } | null>(null)
