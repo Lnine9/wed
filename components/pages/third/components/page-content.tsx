@@ -269,6 +269,8 @@ function ThirdPageAlbum({ active }: { active: boolean }) {
               <div className="scene-album__hero">
                 <img
                   alt={THIRD_PAGE_ALBUM_PHOTOS[activeAlbumPhoto].alt}
+                  decoding="async"
+                  loading="lazy"
                   src={THIRD_PAGE_ALBUM_PHOTOS[activeAlbumPhoto].src}
                 />
                 <span className="scene-album__counter">
@@ -295,7 +297,15 @@ function ThirdPageAlbum({ active }: { active: boolean }) {
                       type="button"
                       onClick={() => selectPhoto(index)}
                     >
-                      <img alt="" aria-hidden="true" src={photo.src} />
+                      <img
+                        alt=""
+                        aria-hidden="true"
+                        decoding="async"
+                        height="96"
+                        loading="lazy"
+                        src={photo.src}
+                        width="112"
+                      />
                     </button>
                   ))}
                 </div>
