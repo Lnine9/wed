@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { GlobalMusicPlayer } from '@/components/ui/global-music-player'
 import { InitialLoading } from '@/components/ui/initial-loading'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className="antialiased bg-[#e9edf1]">
         {children}
         <InitialLoading />
+        <GlobalMusicPlayer />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -35,6 +35,7 @@ const PRELOAD_IMAGES = [
 
 export function InitialLoading() {
   const [isLeaving, setIsLeaving] = useState(false)
+  const [isReady, setIsReady] = useState(false)
   const [isMounted, setIsMounted] = useState(true)
 
   useEffect(() => {
@@ -44,24 +45,29 @@ export function InitialLoading() {
       image.src = src
       return image
     })
-    const leaveTimer = window.setTimeout(() => setIsLeaving(true), 4000)
-    const removeTimer = window.setTimeout(() => setIsMounted(false), 4550)
+    const readyTimer = window.setTimeout(() => setIsReady(true), 4000)
 
     return () => {
       preloadedImages.forEach((image) => {
         image.onload = null
         image.onerror = null
       })
-      window.clearTimeout(leaveTimer)
-      window.clearTimeout(removeTimer)
+      window.clearTimeout(readyTimer)
     }
   }, [])
+
+  const enterProject = () => {
+    if (!isReady) return
+    window.dispatchEvent(new Event('initial-loading-enter'))
+    setIsLeaving(true)
+    window.setTimeout(() => setIsMounted(false), 550)
+  }
 
   if (!isMounted) return null
 
   return (
     <div
-      aria-label="页面加载中"
+      aria-label={isReady ? '点击进入邀请函' : '页面加载中'}
       aria-live="polite"
       className={`initial-loading${isLeaving ? ' is-leaving' : ''}`}
       role="status"
@@ -79,10 +85,24 @@ export function InitialLoading() {
           <circle className="initial-loading__dot" cx="36" cy="11" r="2.2" />
         </svg>
         <p className="initial-loading__eyebrow">A MOMENT TOGETHER</p>
-        <p className="initial-loading__message">正在铺展这一刻</p>
-        <div aria-hidden="true" className="initial-loading__progress">
-          <span />
-        </div>
+        <p className="initial-loading__message">
+          {isReady ? '点击进入' : '正在铺展这一刻'}
+        </p>
+        {isReady ? (
+          <button
+            aria-label="点击进入邀请函并播放音乐"
+            className="initial-loading__enter"
+            onClick={enterProject}
+            onPointerDown={(event) => event.stopPropagation()}
+            type="button"
+          >
+            开启这一刻
+          </button>
+        ) : (
+          <div aria-hidden="true" className="initial-loading__progress">
+            <span />
+          </div>
+        )}
       </div>
     </div>
   )
